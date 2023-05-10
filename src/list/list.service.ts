@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, isObjectIdOrHexString } from 'mongoose';
 import { IListItem } from './interfaces/list-item.interface';
 import { ProductService } from 'src/product/product.service';
 import { CreateListItemDto } from './dto/create-list-item.dto';
@@ -94,8 +94,18 @@ export class ListService {
   };
 
   async delete(deleteListItemDto: DeleteListItemDto, userId: string): Promise<boolean> {
-    const listItem = this.getListItem(String(deleteListItemDto._id));
-    if (userId !== (await listItem).uId)
+    if (!deleteListItemDto._id && isObjectIdOrHexString(deleteListItemDto._id))
+      throw new HttpException("No list item id.", HttpStatus.BAD_REQUEST);
+    try {
+      new ObjectId(deleteListItemDto._id);
+    } catch (e) {
+      throw new HttpException("_id must be an ObjectId", HttpStatus.BAD_REQUEST);
+    }
+    const listItem = await this.getListItem(String(deleteListItemDto._id));
+    if (!listItem)
+      throw new HttpException("Item with this id was not found.", HttpStatus.NOT_FOUND);
+
+    if (userId !== String(listItem.uId))
       throw new HttpException('You dont have permission to delete this item.', HttpStatus.UNAUTHORIZED);
 
     await this.listModel.deleteOne({ _id: deleteListItemDto._id }).exec();

@@ -2,6 +2,7 @@ import { IAddress } from "src/user/interfaces/address.interface";
 
 export interface IReadableUser {
   accessToken: string;
+  refreshToken: string;
   readonly deviceId: string;
   readonly email: string;
   readonly userName: string;
