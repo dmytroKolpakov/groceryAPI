@@ -6,32 +6,29 @@ import { genderEnum } from '../enums/gender.enum';
 export class CreateUserDto {
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
+  // @IsNotEmpty()
   readonly deviceId: string;
 
   @ApiProperty()
   @IsEmail()
-  @IsNotEmpty()
   readonly email: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
   readonly userName: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   readonly firstName:  string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   readonly lastName: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
+  // @IsNotEmpty()
+  @IsOptional()
   @IsEnum(genderEnum)
   readonly gender: string;
 

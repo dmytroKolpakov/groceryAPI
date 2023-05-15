@@ -31,8 +31,11 @@ export class ListController {
 
   @Patch('/status')
   @UseGuards(AuthGuard())
-  async updateStatus(@Body(new ValidationPipe()) updateListItemDto: UpdateListItemDto): Promise<IListItemUpdate> {
-    return this.listServise.update(updateListItemDto)
+  async updateStatus(
+    @Request() req: any,
+    @Body(new ValidationPipe()) updateListItemDto: UpdateListItemDto
+  ): Promise<IListItemUpdate> {
+    return this.listServise.update(updateListItemDto, req.user._id)
   }
 
   @Patch('/clearCart')

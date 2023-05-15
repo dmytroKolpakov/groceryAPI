@@ -4,6 +4,7 @@ import { Request } from 'express';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TokenService } from 'src/token/token.service';
+import { IUser } from 'src/user/interfaces/user.interface';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
@@ -21,8 +22,8 @@ export class RefreshTokenStrategy extends PassportStrategy(
     });
   }
 
-  validate(req: Request, payload: any) {
+  validate(req: Request, user: Partial<IUser>) {
     const refreshToken = req.get('Authorization').replace('Bearer', '').trim();
-    return { ...payload, refreshToken };
+    return { ...user, refreshToken };
   }
 }

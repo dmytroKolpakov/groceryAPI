@@ -24,7 +24,7 @@ export class UserService {
         HttpStatus.BAD_REQUEST
         );
 
-    const createdUser = new this.userModel(_.assignIn(createUserDro, { password: hash, roless }));
+    const createdUser = new this.userModel(_.assignIn(createUserDro, { password: hash, roless, deviceId: [createUserDro.deviceId] }));
     return await createdUser.save();
   };
 
@@ -50,5 +50,16 @@ export class UserService {
 
   async update(id: string, payload: Partial<IUser>) {
     return await this.userModel.updateOne({ _id: id }, payload).exec();
+  }
+
+  async addDeviceId(userId: string, deviceId: string): Promise<void> {
+    const user = await this.find(userId);
+    const userObject = user.toObject();
+
+    const { deviceId: deviceIdList }: { deviceId: string[] } = userObject;
+    if (deviceIdList.includes(deviceId)) return;
+
+    await this.update(userId, { deviceId: [...deviceIdList, deviceId] });
+    return;
   }
 };

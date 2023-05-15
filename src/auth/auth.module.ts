@@ -27,5 +27,3 @@ import { RefreshTokenModule } from 'src/refresh-token/refresh-token.module';
 })
 export class AuthModule {}
 
-// "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NDViYmE0MWJmMjQ2MDYwYzI0M2E5MTAiLCJyb2xlcyI6WyJ1c2VyIl0sImlhdCI6MTY4MzczMzA1N30.jCMsEiHRam-feWSmOuvd26YRnMHOPg7sroJuQCRt06E",
-// "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NDViYmE0MWJmMjQ2MDYwYzI0M2E5MTAiLCJyb2xlcyI6WyJ1c2VyIl0sImlhdCI6MTY4MzczMzA1N30.bbeX3cNd1XIynDWXlpZv4F_S_GqpR376grBIPM8CCe4"

@@ -7,6 +7,7 @@ import { configureModule } from './configure.root';
 import { ProductModule } from './product/product.module';
 import { ListModule } from './list/list.module';
 import { RefreshTokenModule } from './refresh-token/refresh-token.module';
+import { EventsModule } from './events/events.module';
 
 const environment = process.env.NODE_ENV || 'development';
 
@@ -26,6 +27,7 @@ const environment = process.env.NODE_ENV || 'development';
     ProductModule,
     ListModule,
     RefreshTokenModule,
+    EventsModule,
   ],
 })
 export class AppModule {}

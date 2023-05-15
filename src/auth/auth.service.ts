@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import { TokenService } from 'src/token/token.service';
@@ -18,6 +18,8 @@ import { IRefreshTokenPayload } from 'src/refresh-token/interfaces/refresh-token
 import { ObjectId } from 'mongodb';
 import { CreateUserRefreshTokenDto } from 'src/refresh-token/dto/user-refresh-token.dto';
 import { IRefreshResponse } from './interfaces/refresh-response.interface';
+import { SignInDto } from './dto/sign-in.dto';
+import { signInValidator, signUpValidator } from './validators/auth.validator';
 
 @Injectable()
 export class AuthService {
@@ -29,14 +31,29 @@ export class AuthService {
   ) {}
 
   async signUp(createUserDto: CreateUserDto): Promise<IReadableUser> {
+    signUpValidator(createUserDto);
+    const userByEmail = await this.userService.findByEmail(createUserDto.email);
+    const userByUserName = await this.userService.findByUserName(createUserDto.userName);
+
+    if (userByEmail)
+      throw new HttpException('Email already exists.', HttpStatus.BAD_REQUEST);
+    
+    if (userByUserName)
+      throw new HttpException('Username already exists.', HttpStatus.BAD_REQUEST);
+
     const user = await this.userService.create(createUserDto, [rolesEnum.user]);
     await user.save();
     return await this.processUserAuth(user);
   };
 
-  async signIn(signInDto: ISignIn): Promise<IReadableUser> {
+  async signIn(signInDto: SignInDto): Promise<IReadableUser> {
+    signInValidator(signInDto);
     const user = await this.userService.findByEmail(signInDto.email);
+    if (!user)
+      throw new HttpException('User with such email was not found.', HttpStatus.NOT_FOUND);
+
     if (user && (await compare(signInDto.password, user.password))) {
+      await this.userService.addDeviceId(user._id, signInDto.deviceId);
       return await this.processUserAuth(user);
     }
 
@@ -68,7 +85,6 @@ export class AuthService {
       uId: user._id,
     });
 
-
     const readableUser = user.toObject() as IReadableUser;
     readableUser.accessToken = token;
     readableUser.refreshToken = refreshToken;
@@ -76,23 +92,28 @@ export class AuthService {
     return _.omit<any>(readableUser, ['password']) as IReadableUser;
   };
 
-  async refreshAccessToken(refreshToken: string): Promise<IRefreshResponse> {
+  async refreshAccessToken(refreshToken: string, userId: string): Promise<IReadableUser> {
+    const user = (await this.userService.find(userId)).toObject();
     const refreshTokenData = await this.verifyRefreshToken(refreshToken);
-    const tokenPayload: ITokenPayload = {
-      _id: refreshTokenData._id,
-      roles: refreshTokenData.roles,
-    };
-    const newAccessToken = await this.generateToken(tokenPayload);
-    const expireAt = moment()
-      .add(10, 'day')
-      .toISOString();
-      await this.saveToken({
-        token: newAccessToken,
-        expireAt,
-        uId: refreshTokenData._id,
-      });
+    if (!refreshTokenData)
+      throw new UnauthorizedException();
 
-      return { accessToken: newAccessToken };
+    return await this.processUserAuth(user);
+    // const tokenPayload: ITokenPayload = {
+    //   _id: refreshTokenData._id,
+    //   roles: refreshTokenData.roles,
+    // };
+    // const newAccessToken = await this.generateToken(tokenPayload);
+    // const expireAt = moment()
+    //   .add(10, 'day')
+    //   .toISOString();
+    //   await this.saveToken({
+    //     token: newAccessToken,
+    //     expireAt,
+    //     uId: refreshTokenData._id,
+    //   });
+
+    //   return { accessToken: newAccessToken };
   };
 
   private async generateToken(data, options?: SignOptions) : Promise<string> {

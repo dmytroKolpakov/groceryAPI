@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEnum,  } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsOptional,  } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { statusEnum } from '../enums/status.enum';
 
@@ -11,5 +11,6 @@ export class CreateListItemDto {
   @ApiProperty()
   @IsString()
   @IsEnum(statusEnum)
+  @IsOptional()
   readonly status?: string
 };

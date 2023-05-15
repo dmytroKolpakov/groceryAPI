@@ -3,12 +3,12 @@ import { genderEnum } from '../enums/gender.enum';
 import { rolesEnum } from '../enums/roles.enum';
 
 export const UserSchema = new mongoose.Schema({
-  deviceId: { type: String, required: true },
+  deviceId: { type: [String], required: true },
   email: { type: String, required: true },
   userName: { type: String, required: true },
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
-  gender: { type: String, required: true, enam: Object.values(genderEnum) },
+  firstName: { type: String, default: '' },
+  lastName: { type: String, default: ''},
+  gender: { type: String, enam: Object.values(genderEnum), default: genderEnum.male },
   address: {
     country: { type: String, default: null },
     city: { type: String, default: null },
@@ -16,7 +16,7 @@ export const UserSchema = new mongoose.Schema({
     address2: { type: String, default: null },
     postalCode: { type: String, default: null },
   },
-  roles: { type: [String], required: true, enum: Object.values(rolesEnum), default: [rolesEnum.user] },
+  roles: { type: [String], enum: Object.values(rolesEnum), default: [rolesEnum.user] },
   phone: { type: String, default: null },
   password: { type: String, required: true },
 });

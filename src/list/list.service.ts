@@ -12,12 +12,17 @@ import { IProduct } from 'src/product/interfaces/product.interface';
 import { IListResult } from './interfaces/list-result.interface';
 import { DeleteListItemDto } from './dto/delete-llist-item.dto';
 import { statusEnum } from './enums/status.enum';
+import { UserService } from 'src/user/user.service';
+import { EventsGateway } from 'src/events/events.gateway';
+import { eventEnum } from 'src/events/enums/event-type.enum';
 
 @Injectable()
 export class ListService {
   constructor(
     @InjectModel('List') private readonly listModel: Model<IListItem>,
     private readonly productService: ProductService,
+    private readonly userService: UserService,
+    private readonly eventsGateway: EventsGateway,
   ) {}
 
   async createList(): Promise<boolean> {
@@ -71,6 +76,7 @@ export class ListService {
       product = await this.productService.create({ title: createListItemDto.title });
 
     const { _id: productId } = product;
+    const { deviceIds } = (await this.userService.find(id)).toObject();
     const isExists = await this.isExistingProductInList(productId);
     if (isExists)
       throw new HttpException('Already exists.', HttpStatus.BAD_REQUEST);
@@ -79,10 +85,13 @@ export class ListService {
     createdListItem.save();
 
     const createdListItemObject = createdListItem.toObject();
-    return { ...createdListItemObject, productDetails: product, productId };
+    const response = { ...createdListItemObject, productDetails: product, productId };
+    this.eventsGateway.customEmit(deviceIds, response, eventEnum.create);
+    return response;
   };
 
-  async update(updateListItemDto: UpdateListItemDto): Promise<IListItemUpdate> {
+  async update(updateListItemDto: UpdateListItemDto, userId: string): Promise<IListItemUpdate> {
+    const user = (await this.userService.find(userId)).toObject();
     const listItem = await this.listModel.findById(updateListItemDto._id).exec();
     if (!listItem)
       throw new HttpException('Not Found.', HttpStatus.NOT_FOUND);
@@ -90,6 +99,7 @@ export class ListService {
     const responseObject = listItem.toObject();
     const updatedResponse = _.assignIn(responseObject, { status: updateListItemDto.status });
     await this.listModel.updateOne({ _id: updateListItemDto._id }, { status: updateListItemDto.status }).exec();
+    this.eventsGateway.customEmit(user.deviceIds, updatedResponse, eventEnum.update);
     return updatedResponse;
   };
 
@@ -108,12 +118,15 @@ export class ListService {
     if (userId !== String(listItem.uId))
       throw new HttpException('You dont have permission to delete this item.', HttpStatus.UNAUTHORIZED);
 
+    const { deviceIds } = (await this.userService.find(userId)).toObject();
+    this.eventsGateway.customEmit(deviceIds, listItem, eventEnum.delete);
+
     await this.listModel.deleteOne({ _id: deleteListItemDto._id }).exec();
     return true;
   };
 
   async clearCart(userId: string): Promise<IListResult[]> {
-    await this.listModel.updateMany({ uId: userId }, { status: statusEnum.none });
+    await this.listModel.updateMany({ uId: userId }, { status: statusEnum.cart });
     return await this.getUserProductsList(userId);
   }
 }
