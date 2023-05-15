@@ -93,7 +93,8 @@ export class AuthService {
   };
 
   async refreshAccessToken(refreshToken: string, userId: string): Promise<IReadableUser> {
-    const user = (await this.userService.find(userId)).toObject();
+    console.log('userId', userId);
+    const user = await this.userService.find(userId);
     const refreshTokenData = await this.verifyRefreshToken(refreshToken);
     if (!refreshTokenData)
       throw new UnauthorizedException();

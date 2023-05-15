@@ -8,6 +8,7 @@ import { ProductModule } from './product/product.module';
 import { ListModule } from './list/list.module';
 import { RefreshTokenModule } from './refresh-token/refresh-token.module';
 import { EventsModule } from './events/events.module';
+import { AppController } from './app.controller';
 
 const environment = process.env.NODE_ENV || 'development';
 
@@ -29,5 +30,6 @@ const environment = process.env.NODE_ENV || 'development';
     RefreshTokenModule,
     EventsModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}
