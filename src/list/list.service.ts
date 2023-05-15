@@ -126,7 +126,7 @@ export class ListService {
   };
 
   async clearCart(userId: string): Promise<IListResult[]> {
-    await this.listModel.updateMany({ uId: userId }, { status: statusEnum.cart });
+    await this.listModel.updateMany({ uId: userId }, { status: statusEnum.home });
     return await this.getUserProductsList(userId);
   }
 }
