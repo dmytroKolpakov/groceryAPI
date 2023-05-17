@@ -20,7 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "engines": {
-    "node": "16.14.0"
+    "node": "16.18.1"
   },
   "dependencies": {
     "@hapi/joi": "^17.1.1",
