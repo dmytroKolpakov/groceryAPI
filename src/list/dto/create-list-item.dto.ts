@@ -12,5 +12,10 @@ export class CreateListItemDto {
   @IsString()
   @IsEnum(statusEnum)
   @IsOptional()
-  readonly status?: string
+  readonly status?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  readonly excludeId: string;
 };

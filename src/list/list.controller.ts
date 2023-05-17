@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Patch, Post, UseGuards, Request, Body, ValidationPipe } from '@nestjs/common';
+import { Controller, Delete, Get, Patch, Post, UseGuards, Request, Body, ValidationPipe, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateListItemDto } from './dto/create-list-item.dto';
@@ -48,9 +48,11 @@ export class ListController {
   @UseGuards(AuthGuard())
   async deleteProductFromList(
     @Request() req: any,
-    @Body(new ValidationPipe()) deleteListItemDto: DeleteListItemDto
+    @Query('id') id: string,
+    @Query('excludeId') excludeId: string,
+    // @Body(new ValidationPipe()) deleteListItemDto: DeleteListItemDto
   ): Promise<boolean> {
-    return this.listServise.delete(deleteListItemDto, req.user._id);
+    return this.listServise.delete(id, req.user._id, excludeId);
   }
 
   @Delete('/deleteAll')
