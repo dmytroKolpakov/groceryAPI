@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import * as bcrypt from 'bcrypt';
 import * as _ from 'lodash';
 import { IProduct } from './interfaces/product.interface';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -14,6 +13,28 @@ export class ProductService {
     const product = new this.productModel(createProductDto);
     return await product.save();
   };
+
+  async createMany(list: Array<string>): Promise<Array<IProduct>> {
+    const existedProducts = await this.match(list);
+    const productsToCreate = list?.filter(product => !existedProducts?.map(p => p.title).includes(product));
+    const insertMany = productsToCreate?.map(p => ({ title: p }));
+    await this.productModel.insertMany(insertMany);
+    return await this.match(list);
+  }
+
+  async match(titleList: Array<string>): Promise<Array<IProduct>> {
+    const products = await this.productModel.aggregate([
+      {
+        $match: {
+          title: {
+            $in: titleList
+          }
+        }
+      }
+    ]);
+
+    return products;
+  }
 
   async deleteProduct(id: string): Promise<boolean> {
     try {

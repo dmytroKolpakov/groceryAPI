@@ -6,3 +6,8 @@ export interface IListItem {
   readonly productId: string;
   readonly productDetails: IProduct;
 };
+
+export interface IListItemSignUp {
+  readonly status: string;
+  readonly productDetails: IProduct;
+};

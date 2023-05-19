@@ -3,6 +3,7 @@ import { Server, Socket } from 'socket.io';
 import { EventType } from './types/events.type';
 import { IListResult } from 'src/list/interfaces/list-result.interface';
 import * as _ from 'lodash';
+import { SyncListDto } from 'src/list/dto/sync-list.dto';
 
 @WebSocketGateway({
   // namespace: 'socket.io',
@@ -22,9 +23,9 @@ export class EventsGateway {
 
   };
 
-  customEmit(deviceIds: Array<string>, product: IListResult, type: EventType, exclude?: string) {
+  customEmit(deviceIds: Array<string>, product: IListResult | SyncListDto[], type: EventType, exclude?: string) {
     (exclude && exclude.trim() !== '' ? deviceIds.filter(i => i !== exclude) : deviceIds)?.map(id => {
-      this.server.emit(`list-${type}-${id}`, { ..._.omit(product, '__v') });
+      this.server.emit(`list-${type}-${id}`, product);
     });
   };
 }

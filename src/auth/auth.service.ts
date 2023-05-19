@@ -9,7 +9,6 @@ import { IUser } from 'src/user/interfaces/user.interface';
 import { rolesEnum } from 'src/user/enums/roles.enum';
 import * as moment from 'moment';
 import * as _ from 'lodash';
-import { ISignIn } from './interfaces/sign-in.interface';
 import { IReadableUser } from './interfaces/readable-user.interface';
 import { compare } from 'bcrypt';
 import { ITokenPayload } from 'src/token/interfaces/token-payload.interface';
@@ -20,13 +19,17 @@ import { CreateUserRefreshTokenDto } from 'src/refresh-token/dto/user-refresh-to
 import { IRefreshResponse } from './interfaces/refresh-response.interface';
 import { SignInDto } from './dto/sign-in.dto';
 import { signInValidator, signUpValidator } from './validators/auth.validator';
+import { ProductService } from 'src/product/product.service';
+import { ListService } from 'src/list/list.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
+    private readonly listService: ListService,
     private readonly tokenService: TokenService,
+    private readonly productService: ProductService,
     private readonly refreshService: RefreshTokenService,
   ) {}
 
@@ -42,6 +45,19 @@ export class AuthService {
       throw new HttpException('Username already exists.', HttpStatus.BAD_REQUEST);
 
     const user = await this.userService.create(createUserDto, [rolesEnum.user]);
+    if (createUserDto?.list) {
+      const products = createUserDto.list?.map(listItem => listItem.productDetails.title);
+      const productsList = await this.productService.createMany(products);
+      const productHashMap = {};
+      productsList?.map((item) => {productHashMap[item.title] = item._id});
+      const createUserListArray = createUserDto.list?.map(listItem => ({
+        productId: productHashMap[listItem.productDetails.title],
+        status: listItem.status,
+        uId: user._id,
+      }));
+      await this.listService.createMany(createUserListArray);
+    };
+
     await user.save();
     return await this.processUserAuth(user);
   };
@@ -93,28 +109,12 @@ export class AuthService {
   };
 
   async refreshAccessToken(refreshToken: string, userId: string): Promise<IReadableUser> {
-    console.log('userId', userId);
     const user = await this.userService.find(userId);
     const refreshTokenData = await this.verifyRefreshToken(refreshToken);
     if (!refreshTokenData)
       throw new UnauthorizedException();
 
     return await this.processUserAuth(user);
-    // const tokenPayload: ITokenPayload = {
-    //   _id: refreshTokenData._id,
-    //   roles: refreshTokenData.roles,
-    // };
-    // const newAccessToken = await this.generateToken(tokenPayload);
-    // const expireAt = moment()
-    //   .add(10, 'day')
-    //   .toISOString();
-    //   await this.saveToken({
-    //     token: newAccessToken,
-    //     expireAt,
-    //     uId: refreshTokenData._id,
-    //   });
-
-    //   return { accessToken: newAccessToken };
   };
 
   private async generateToken(data, options?: SignOptions) : Promise<string> {

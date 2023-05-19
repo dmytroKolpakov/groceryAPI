@@ -20,6 +20,7 @@ import { UserModule } from 'src/user/user.module';
     MongooseModule.forFeature([{ name: 'List', schema: ListSchema }]),
   ],
   providers: [ListService, JwtStrategy],
-  controllers: [ListController]
+  controllers: [ListController],
+  exports: [ListService],
 })
 export class ListModule {}

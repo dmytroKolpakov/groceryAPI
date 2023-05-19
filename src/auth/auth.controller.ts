@@ -5,7 +5,6 @@ import { ApiTags } from '@nestjs/swagger';
 import { SignInDto } from './dto/sign-in.dto';
 import { IReadableUser } from './interfaces/readable-user.interface';
 import { AuthGuard } from '@nestjs/passport';
-import { IRefreshResponse } from './interfaces/refresh-response.interface';
 
 @ApiTags('auth')
 @Controller('auth')

@@ -2,8 +2,13 @@ import { Matches, IsString, IsEmail, IsNotEmpty, IsEnum, IsOptional,  } from 'cl
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateAddressDto } from './create-address.dto';
 import { genderEnum } from '../enums/gender.enum';
+import { IListItemSignUp } from 'src/list/interfaces/list-item.interface';
 
 export class CreateUserDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  readonly list: Array<IListItemSignUp>;
+
   @ApiProperty()
   @IsString()
   // @IsNotEmpty()

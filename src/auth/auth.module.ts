@@ -9,11 +9,15 @@ import { TokenModule } from 'src/token/token.module';
 import { JwtStrategy } from './jwt.strategy';
 import { RefreshTokenStrategy } from './refresh.strategy';
 import { RefreshTokenModule } from 'src/refresh-token/refresh-token.module';
+import { ProductModule } from 'src/product/product.module';
+import { ListModule } from 'src/list/list.module';
 
 @Module({
   imports: [
     UserModule,
     TokenModule,
+    ProductModule,
+    ListModule,
     RefreshTokenModule,
     configureModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),

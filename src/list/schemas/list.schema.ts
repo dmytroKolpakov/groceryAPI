@@ -6,5 +6,3 @@ export const ListSchema = new mongoose.Schema({
   status: { type: String, required: true, default: statusEnum.cart },
   productId: { type: mongoose.Types.ObjectId, required: true },
 });
-
-ListSchema.index({ productId: 1 }, { unique: true });

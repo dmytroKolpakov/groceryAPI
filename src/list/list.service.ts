@@ -10,11 +10,13 @@ import * as _ from 'lodash';
 import { ObjectId } from 'mongodb';
 import { IProduct } from 'src/product/interfaces/product.interface';
 import { IListResult } from './interfaces/list-result.interface';
-import { DeleteListItemDto } from './dto/delete-llist-item.dto';
 import { statusEnum } from './enums/status.enum';
 import { UserService } from 'src/user/user.service';
 import { EventsGateway } from 'src/events/events.gateway';
 import { eventEnum } from 'src/events/enums/event-type.enum';
+import { ICreateListItemMany } from './interfaces/list-item-create-many.interface';
+import { SyncListDto } from './dto/sync-list.dto';
+import { SyncDto } from './dto/sync.dto';
 
 @Injectable()
 export class ListService {
@@ -30,6 +32,25 @@ export class ListService {
     list.save();
     return true;
   };
+
+  async match(idList: Array<string>, uId: string): Promise<Array<IProduct>> {
+    const listItems = await this.listModel.aggregate([
+      {
+        $match: {
+          _id: {
+            $in: idList?.map(i => new ObjectId(i))
+          }
+        }
+      },
+    ]);
+
+    return listItems;
+  }
+
+  async createMany(list: Array<ICreateListItemMany>): Promise<boolean> {
+    await this.listModel.insertMany(list);
+    return true;
+  }
 
   async getListItem(id: string): Promise<IListItem> {
     return await this.listModel.findById(id).exec();
@@ -130,4 +151,41 @@ export class ListService {
     await this.listModel.updateMany({ uId: userId }, { status: statusEnum.home });
     return await this.getUserProductsList(userId);
   };
+
+  async syncData(syncDto: SyncDto, userId: string): Promise<any> {
+    const syncListDto = syncDto.list;
+    const excludeId = syncDto?.excludeId;
+    const moveToCartList = syncListDto.filter((item) => item.status === statusEnum.cart);
+    const moveToHomeList = syncListDto.filter((item) => item.status === statusEnum.home);
+    const cartIds = moveToCartList?.map(item => item?._id);
+    const homeIds = moveToHomeList?.map(item => item?._id);
+    let cartResponse = [];
+    let homeResponse = [];
+    const { deviceId } = (await this.userService.find(userId)).toObject();
+    if (cartIds?.length) {
+      const cartItemsToUpdate = await this.match(cartIds, userId);
+      if (cartItemsToUpdate?.length) {
+        await this.listModel.updateMany(
+          { _id: { $in: cartItemsToUpdate?.map((i) => i._id) }},
+          { $set: { status: statusEnum.cart }}
+        );
+        cartResponse = cartItemsToUpdate?.map((i) => ({ _id: i._id, status: statusEnum.cart }))
+      }
+    };
+
+    if (homeIds?.length) {
+      const homeItemsToUpdate = await this.match(homeIds, userId);
+      if (homeItemsToUpdate?.length) {
+        await this.listModel.updateMany(
+          { _id: { $in: homeItemsToUpdate?.map((i) => i._id) }},
+          { $set: { status: statusEnum.home }}
+        );
+        homeResponse = homeItemsToUpdate?.map((i) => ({ _id: i._id, status: statusEnum.home }));
+      };
+    };
+
+    const response: SyncListDto[] = [...cartResponse, ...homeResponse];
+    this.eventsGateway.customEmit(deviceId, response, eventEnum.sync, excludeId);
+    return response;
+  }
 }

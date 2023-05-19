@@ -8,6 +8,8 @@ import { IListItemUpdate } from './interfaces/list-item-update.interface';
 import { ListService } from './list.service';
 import { DeleteListItemDto } from './dto/delete-llist-item.dto';
 import { IListResult } from './interfaces/list-result.interface';
+import { SyncListDto } from './dto/sync-list.dto';
+import { SyncDto } from './dto/sync.dto';
 
 @ApiTags('list')
 @Controller('list')
@@ -50,7 +52,6 @@ export class ListController {
     @Request() req: any,
     @Query('id') id: string,
     @Query('excludeId') excludeId: string,
-    // @Body(new ValidationPipe()) deleteListItemDto: DeleteListItemDto
   ): Promise<boolean> {
     return this.listServise.delete(id, req.user._id, excludeId);
   }
@@ -59,5 +60,14 @@ export class ListController {
   @UseGuards(AuthGuard())
   async clearAllProductsInList(@Request() req: any) {
     return await this.listServise.clearUserProductList(req.user._id);
+  };
+
+  @Post('/sync')
+  @UseGuards(AuthGuard())
+  async sync(
+    @Body(new ValidationPipe()) syncListDto: SyncDto,
+    @Request() req: any,
+    ) {
+    return await this.listServise.syncData(syncListDto, req.user._id);
   }
 };
